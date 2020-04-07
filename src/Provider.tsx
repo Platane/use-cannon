@@ -15,6 +15,7 @@ export type ProviderProps = {
   allowSleep?: boolean
   broadphase?: 'Naive' | 'SAP'
   axisIndex?: number
+  maxSubSteps?: number
   defaultContactMaterial?: {
     friction?: number
     restitution?: number
@@ -84,6 +85,7 @@ type IncomingWorkerMessage = WorkerFrameMessage | WorkerSyncMessage | WorkerEven
 export default function Provider({
   children,
   step = 1 / 60,
+  maxSubSteps = 5,
   gravity = [0, -10, 0],
   tolerance = 0.001,
   iterations = 5,
@@ -113,6 +115,7 @@ export default function Provider({
         gravity,
         tolerance,
         step,
+        maxSubSteps,
         iterations,
         broadphase,
         allowSleep,

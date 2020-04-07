@@ -25,11 +25,12 @@ import {
   RaycastResult,
 } from 'cannon-es'
 
+let lastCallTime = 0
 let bodies = {}
 const springs = {}
 const rays = {}
 const world = new World()
-const config = { step: 1 / 60 }
+const config = { step: 1 / 60, maxSubSteps: 5 }
 const subscriptions = {}
 const tempVector = new Vec3()
 
@@ -73,6 +74,7 @@ self.onmessage = (e) => {
         gravity,
         tolerance,
         step,
+        maxSubSteps,
         iterations,
         allowSleep,
         broadphase,
@@ -87,11 +89,15 @@ self.onmessage = (e) => {
       world.broadphase = new (broadphases[broadphase + 'Broadphase'] || NaiveBroadphase)(world)
       world.broadphase.axisIndex = axisIndex ?? 0
       Object.assign(world.defaultContactMaterial, defaultContactMaterial)
-      config.step = step
+      if (typeof step === 'number') config.step = step
+      if (typeof maxSubSteps === 'number') config.maxSubSteps = maxSubSteps
       break
     }
     case 'step': {
-      world.step(config.step)
+      const now = Date.now() / 1000
+      const timeSinceLastCall = lastCallTime === 0 ? 0 : now - lastCallTime
+      lastCallTime = now
+      world.step(config.step, timeSinceLastCall, config.maxSubSteps)
       const numberOfBodies = world.bodies.length
       for (let i = 0; i < numberOfBodies; i++) {
         let b = world.bodies[i],
