@@ -43,11 +43,11 @@ const BoxAndBall = () => {
   )
 }
 
-export default () => {
+export default ({ maxSubSteps }) => {
   return (
     <Canvas sRGB camera={{ position: [0, 0, 8], fov: 50 }}>
       <color attach="background" args={['#171720']} />
-      <Physics gravity={[0, -40, 0]} allowSleep={false}>
+      <Physics gravity={[0, -40, 0]} allowSleep={false} maxSubSteps={maxSubSteps}>
         <BoxAndBall />
       </Physics>
     </Canvas>

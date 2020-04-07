@@ -16,7 +16,7 @@ function Plane({ color, ...props }) {
 
 function Box() {
   const [ref, api] = useBox(() => ({ type: 'Kinematic', mass: 1, args: [2, 2, 2] }))
-  useFrame(state => {
+  useFrame((state) => {
     const t = state.clock.getElapsedTime()
     api.position.set(Math.sin(t * 2) * 5, Math.cos(t * 2) * 5, 3)
     api.rotation.set(Math.sin(t * 6), Math.cos(t * 6), 0)
@@ -30,7 +30,7 @@ function Box() {
 }
 
 function InstancedSpheres({ number = 100 }) {
-  const [ref] = useSphere(index => ({
+  const [ref] = useSphere((index) => ({
     mass: 1,
     position: [Math.random() - 0.5, Math.random() - 0.5, index * 2],
     args: 1,
@@ -56,7 +56,7 @@ function InstancedSpheres({ number = 100 }) {
   )
 }
 
-export default () => (
+export default ({ maxSubSteps }) => (
   <Canvas concurrent shadowMap sRGB gl={{ alpha: false }} camera={{ position: [0, -12, 16] }}>
     <hemisphereLight intensity={0.35} />
     <spotLight
@@ -69,7 +69,7 @@ export default () => (
       shadow-mapSize-height={256}
     />
     <pointLight position={[-30, 0, -30]} intensity={0.5} />
-    <Physics gravity={[0, 0, -30]}>
+    <Physics gravity={[0, 0, -30]} maxSubSteps={maxSubSteps}>
       <Plane color={niceColors[17][4]} />
       <Plane color={niceColors[17][1]} position={[-6, 0, 0]} rotation={[0, 0.9, 0]} />
       <Plane color={niceColors[17][2]} position={[6, 0, 0]} rotation={[0, -0.9, 0]} />

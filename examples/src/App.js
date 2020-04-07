@@ -1,9 +1,10 @@
-import React, { Suspense } from 'react'
+import React, { useState, Suspense } from 'react'
 import styled from 'styled-components'
 import { HashRouter as Router, Link, Route, Switch, useRouteMatch } from 'react-router-dom'
 import { Global } from './styles'
 
 import * as demos from './demos'
+import FrameRateDelay from './FrameRateDelay'
 import { Page as PageImpl } from './styles'
 
 const Page = styled(PageImpl)`
@@ -31,8 +32,21 @@ const visibleComponents = Object.entries(demos)
 function Intro() {
   let match = useRouteMatch('/demo/:name')
   let { bright } = visibleComponents[match ? match.params.name : defaultComponent]
+
+  const [maxSubSteps, setMaxSubSteps] = useState(1)
+
   return (
     <Page>
+      <FrameRateDelay />
+      <input
+        style={{ marginLeft: '200px' }}
+        type="range"
+        min={1}
+        max={15}
+        value={maxSubSteps}
+        onChange={(e) => setMaxSubSteps(+e.target.value)}
+      />
+      <span>{maxSubSteps} max sub steps</span>
       <Suspense fallback={null}>
         <Switch>
           <Route exact path="/" component={visibleComponents[defaultComponent].Component} />
@@ -41,7 +55,7 @@ function Intro() {
             path="/demo/:name"
             render={({ match }) => {
               const Component = visibleComponents[match.params.name].Component
-              return <Component />
+              return <Component key={maxSubSteps} maxSubSteps={maxSubSteps} />
             }}
           />
         </Switch>

@@ -44,7 +44,7 @@ function Cubes({ number }) {
   )
 }
 
-export default () => (
+export default ({ maxSubSteps }) => (
   <Canvas
     shadowMap
     sRGB
@@ -61,7 +61,7 @@ export default () => (
       shadow-mapSize-width={256}
       shadow-mapSize-height={256}
     />
-    <Physics broadphase="SAP">
+    <Physics broadphase="SAP" maxSubSteps={maxSubSteps}>
       <Plane rotation={[-Math.PI / 2, 0, 0]} />
       <Cubes number={200} />
     </Physics>
