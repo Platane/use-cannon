@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import React, { useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Canvas, useFrame } from 'react-three-fiber'
 import niceColors from 'nice-color-palettes'
 import { Physics, usePlane, useBox } from 'use-cannon'
@@ -44,26 +44,45 @@ function Cubes({ number }) {
   )
 }
 
-export default ({ maxSubSteps }) => (
-  <Canvas
-    shadowMap
-    sRGB
-    gl={{ alpha: false }}
-    camera={{ position: [-1, 1, 2.5], fov: 50 }}
-    onCreated={({ scene }) => (scene.background = new THREE.Color('lightblue'))}>
-    <hemisphereLight intensity={0.35} />
-    <spotLight
-      position={[5, 5, 5]}
-      angle={0.3}
-      penumbra={1}
-      intensity={2}
-      castShadow
-      shadow-mapSize-width={256}
-      shadow-mapSize-height={256}
-    />
-    <Physics broadphase="SAP" maxSubSteps={maxSubSteps}>
-      <Plane rotation={[-Math.PI / 2, 0, 0]} />
-      <Cubes number={200} />
-    </Physics>
-  </Canvas>
-)
+export default ({ maxSubSteps }) => {
+  const [number, setNumber] = useState(200)
+
+  return (
+    <>
+      <div>
+        <input
+          type="range"
+          value={number}
+          onChange={(e) => setNumber(+e.target.value)}
+          step={5}
+          min={5}
+          max={600}
+          style={{ width: 'calc( 100% - 90px )' }}
+        />
+        <span>{number} cubes</span>
+      </div>
+      <Canvas
+        key={number}
+        shadowMap
+        sRGB
+        gl={{ alpha: false }}
+        camera={{ position: [-1, 1, 2.5], fov: 50 }}
+        onCreated={({ scene }) => (scene.background = new THREE.Color('lightblue'))}>
+        <hemisphereLight intensity={0.35} />
+        <spotLight
+          position={[5, 5, 5]}
+          angle={0.3}
+          penumbra={1}
+          intensity={2}
+          castShadow
+          shadow-mapSize-width={256}
+          shadow-mapSize-height={256}
+        />
+        <Physics broadphase="SAP" maxSubSteps={maxSubSteps}>
+          <Plane rotation={[-Math.PI / 2, 0, 0]} />
+          <Cubes number={number} />
+        </Physics>
+      </Canvas>
+    </>
+  )
+}
