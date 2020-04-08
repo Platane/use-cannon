@@ -26,11 +26,12 @@ import {
 } from 'cannon-es'
 
 let lastCallTime = 0
+let timeRemainingFromlastStep = 0
 let bodies = {}
 const springs = {}
 const rays = {}
 const world = new World()
-const config = { step: 1 / 60, maxSubSteps: 5 }
+const config = { step: 1 / 60, maxSubSteps: 5, maxComputingTime: 1 / 60 }
 const subscriptions = {}
 const tempVector = new Vec3()
 
@@ -75,6 +76,7 @@ self.onmessage = (e) => {
         tolerance,
         step,
         maxSubSteps,
+        maxComputingTime,
         iterations,
         allowSleep,
         broadphase,
@@ -91,13 +93,29 @@ self.onmessage = (e) => {
       Object.assign(world.defaultContactMaterial, defaultContactMaterial)
       if (typeof step === 'number') config.step = step
       if (typeof maxSubSteps === 'number') config.maxSubSteps = maxSubSteps
+      if (typeof maxComputingTime === 'number') config.maxComputingTime = maxComputingTime
       break
     }
     case 'step': {
       const now = Date.now() / 1000
       const timeSinceLastCall = lastCallTime === 0 ? 0 : now - lastCallTime
       lastCallTime = now
-      world.step(config.step, timeSinceLastCall, config.maxSubSteps)
+
+      timeRemainingFromlastStep += timeSinceLastCall
+
+      let step = 0
+      while (
+        step < config.maxSubSteps &&
+        timeRemainingFromlastStep > config.step &&
+        Date.now() / 1000 - now < config.maxComputingTime
+      ) {
+        world.step(config.step)
+        timeRemainingFromlastStep -= config.step
+        step++
+      }
+
+      timeRemainingFromlastStep = Math.min(timeRemainingFromlastStep, config.step)
+
       const numberOfBodies = world.bodies.length
       for (let i = 0; i < numberOfBodies; i++) {
         let b = world.bodies[i],
