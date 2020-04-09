@@ -25,13 +25,13 @@ import {
   RaycastResult,
 } from 'cannon-es'
 
+let averageStepComputationDuration = 1 / 60
 let lastCallTime = 0
-let timeRemainingFromlastStep = 0
 let bodies = {}
 const springs = {}
 const rays = {}
 const world = new World()
-const config = { step: 1 / 60, maxSubSteps: 5, maxComputingTime: 1 / 60 }
+const config = { step: 1 / 60, maxSubSteps: 5, maxComputingDuration: 1 / 60 }
 const subscriptions = {}
 const tempVector = new Vec3()
 
@@ -76,7 +76,7 @@ self.onmessage = (e) => {
         tolerance,
         step,
         maxSubSteps,
-        maxComputingTime,
+        maxComputingDuration,
         iterations,
         allowSleep,
         broadphase,
@@ -93,7 +93,7 @@ self.onmessage = (e) => {
       Object.assign(world.defaultContactMaterial, defaultContactMaterial)
       if (typeof step === 'number') config.step = step
       if (typeof maxSubSteps === 'number') config.maxSubSteps = maxSubSteps
-      if (typeof maxComputingTime === 'number') config.maxComputingTime = maxComputingTime
+      if (typeof maxComputingDuration === 'number') config.maxComputingDuration = maxComputingDuration
       break
     }
     case 'step': {
@@ -101,20 +101,23 @@ self.onmessage = (e) => {
       const timeSinceLastCall = lastCallTime === 0 ? 0 : now - lastCallTime
       lastCallTime = now
 
-      timeRemainingFromlastStep += timeSinceLastCall
+      // set maxSubSteps, respect config.maxComputingDuration according to the average step duration
+      const maxSubSteps = Math.min(
+        config.maxSubSteps,
+        Math.ceil(config.maxComputingDuration / averageStepComputationDuration)
+      )
 
-      let step = 0
-      while (
-        step < config.maxSubSteps &&
-        timeRemainingFromlastStep > config.step &&
-        Date.now() / 1000 - now < config.maxComputingTime
-      ) {
-        world.step(config.step)
-        timeRemainingFromlastStep -= config.step
-        step++
+      const stepnumberbeforestep = world.stepnumber
+      world.step(config.step, timeSinceLastCall, maxSubSteps)
+      const dstep = world.stepnumber - stepnumberbeforestep
+
+      console.log(dstep + '/' + maxSubSteps + '/' + config.maxSubSteps)
+
+      // update averageStepComputationDuration
+      if (dstep > 0) {
+        const stepComputationDuration = (Date.now() / 1000 - now) / dstep
+        averageStepComputationDuration = (averageStepComputationDuration * 9 + stepComputationDuration) / 10
       }
-
-      timeRemainingFromlastStep = Math.min(timeRemainingFromlastStep, config.step)
 
       const numberOfBodies = world.bodies.length
       for (let i = 0; i < numberOfBodies; i++) {
